@@ -9,6 +9,7 @@
 | `http://localhost:3000` | ✔ (예외 허용) | 사용 가능 |
 | `https://...` | ✔ | 사용 가능 |
 | `http://192.168.x.x:3000` | ✘ | **`navigator.mediaDevices` 자체가 `undefined`** |
+| `https://192.168.x.x:3000` (HTTPS 모드, 자체 서명) | ✔ | 첫 접속 시 인증서 경고를 넘기면 사용 가능 (실제 검증 완료) |
 | `file:///.../index.html` | - | WebSocket 주소가 잘못되어 시그널링 불가 |
 
 IP 주소로 접속하면 연결은 되지만 카메라가 막힙니다.
@@ -49,6 +50,21 @@ npm run start:https          # 또는 .env 에 HTTPS=1 후 npm start
 > `http` 로 실행 중인 서버에 `https://` 로 접속하면 `ERR_SSL_PROTOCOL_ERROR` 가 납니다.
 > 반대로 HTTPS 모드 서버에는 `http://` 로 접속할 수 없습니다.
 
+#### 인증서 경고 (`NET::ERR_CERT_AUTHORITY_INVALID`)
+
+- 자체 서명 인증서는 브라우저가 신뢰하는 인증기관(CA) 목록에 없어서 경고가 뜹니다. **예상된 동작**입니다.
+- 연결은 암호화됩니다. 경고는 "상대가 진짜 그 서버인지 확인할 수 없다"는 뜻입니다.
+- 접속하는 PC·브라우저마다 한 번 넘기면, 서버가 같은 인증서를 재사용하므로 보통 다시 묻지 않습니다.
+  (브라우저를 완전히 껐다 켜면 다시 물을 수 있음)
+- 경고를 넘긴 HTTPS 페이지에서 카메라·`wss://` 시그널링이 정상 동작하고, **다른 PC 와 영상 연결이 되는 것을 실제로 확인**했습니다.
+
+#### 경고를 없애려면 (선택)
+
+| 방법 | 내용 | 주의 |
+|---|---|---|
+| mkcert / 로컬 CA | 로컬 인증기관으로 서버 인증서 발급 → 각 PC 에 CA 인증서를 "신뢰할 수 있는 루트 인증 기관"으로 설치 → `.env` 에 `TLS_CERT`, `TLS_KEY` | CA 를 설치한 PC 는 그 CA 가 서명한 모든 인증서를 신뢰. CA 개인키 관리, 실습 후 CA 제거 권장 |
+| cloudflared 터널 | 정식 인증서가 붙은 `https://xxxx.trycloudflare.com` | 별도 프로그램, 외부 경유 |
+
 ## 3. 경우 2 — 다른 네트워크(다른 공유기, LTE 등)
 
 두 가지가 **동시에** 필요합니다.
@@ -65,7 +81,7 @@ npm run start:https          # 또는 .env 에 HTTPS=1 후 npm start
 
 ## 4. 단계별 확인 순서
 
-1. 같은 PC 에서 탭 2개 → `host ↔ host`
-2. 같은 와이파이의 다른 PC/폰 (터널 HTTPS) → `host ↔ host`
+1. 같은 PC 에서 탭 2개 (`npm start`, `http://localhost:3000`) → `host ↔ host`
+2. 같은 와이파이의 다른 PC/폰 (`npm run start:https`, `https://<서버 IP>:3000`) → `host ↔ host` ✔ 검증 완료
 3. 폰을 LTE 로 전환 → `srflx` 경로 (STUN)
 4. 연결 실패(`failed`) 시 TURN 추가, `chrome://webrtc-internals` 에서 후보 쌍 확인

@@ -24,13 +24,15 @@
 | 4 | 두 탭 영상 연결 | Offer/Answer/ICE 를 시그널링으로 교환해 1:1 통화 (`index.html`) |
 | 5 | 마무리 | 연결 상태·후보 쌍 표시, 음소거, 종료, 재접속 |
 | 6 | STUN/TURN | `/ice-config`, relay 강제, ICE 테스트 페이지, coturn (`ice-test.html`) |
+| 7 | HTTPS 모드 | `npm run start:https`, 자체 서명 인증서 자동 생성 → **다른 PC 와 실제 카메라로 영상 연결 성공** |
 
 ## 빠른 시작
 
 ```bash
 npm install
 copy .env.example .env      # 필요 시 STUN/TURN 값 수정
-npm start                   # http://localhost:3000
+npm start                   # http://localhost:3000  (같은 PC 의 탭끼리)
+npm run start:https         # https://<서버 IP>:3000 (다른 PC 와 연결)
 ```
 
 - 탭 2개(또는 브라우저 2개)에서 `http://localhost:3000` → **카메라 켜기 → 접속**
@@ -53,6 +55,7 @@ npm start                   # http://localhost:3000
 | 경로 탐색 | ICE (host / srflx / relay 후보) | 통하는 네트워크 경로 탐색 |
 | 시그널링 | WebSocket (`ws`) | SDP·ICE 후보 전달 (WebRTC 표준에 없음 → 직접 구현) |
 | 서버 | Node.js + Express | 정적 파일, 시그널링, ICE 설정 제공 |
+| 보안 연결 | Node `https` + `selfsigned` | 다른 PC 에서 카메라를 쓰기 위한 HTTPS (secure context), `wss://` 시그널링 |
 | NAT 통과 | STUN (`stun.l.google.com:19302`) | 공인 IP:포트 확인 |
 | 중계 | TURN (coturn, Docker) | 직접 연결이 안 될 때 미디어 중계 |
 | 디버깅 | `chrome://webrtc-internals`, `getStats()` | 연결 상태·후보 쌍·비트레이트 확인 |
@@ -62,3 +65,8 @@ npm start                   # http://localhost:3000
 - Node.js 22.9 이상 (`--env-file-if-exists` 사용). 개발 환경: Node 24
 - Chrome / Edge 최신
 - (선택) Docker Desktop — coturn 실행용
+
+## 저장소
+
+- GitHub: https://github.com/csnam-nature/WebRTCExam (`main` 브랜치)
+- git 에 올리지 않는 파일: `.env` (TURN 비밀값), `cert/` (인증서 개인키), `node_modules/`

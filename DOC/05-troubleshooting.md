@@ -50,6 +50,13 @@
 - **해결**: 서버에 HTTPS 모드 추가 → `npm run start:https` 로 실행 후 `https://IP:3000` 접속.
   자체 서명 인증서 경고는 [고급] → [계속 진행]
 
+### 2.1-2 HTTPS 모드 첫 접속 시 `NET::ERR_CERT_AUTHORITY_INVALID`
+
+- **증상**: "연결이 비공개로 설정되어 있지 않습니다 — 공격자가 localhost에서 사용자의 정보를 도용하려고 시도할 수 있습니다"
+- **원인**: 서버가 직접 만든 자체 서명 인증서라 브라우저가 발급자(CA)를 신뢰하지 않음. **오류가 아니라 예상된 경고**
+- **해결**: [고급] → [localhost(또는 IP)(안전하지 않음)(으)로 이동]. 이후 카메라·시그널링 정상 동작, 다른 PC 와 영상 연결 확인
+- 경고 자체를 없애려면 mkcert(로컬 CA) 또는 cloudflared 터널 → [04-network-access.md](04-network-access.md)
+
 ### 2.2 같은 PC 에서 탭 2개로 카메라를 열 수 없음
 
 - **증상**: `NotReadableError`
@@ -96,6 +103,8 @@
 - [ ] remoteDescription 이전 candidate 를 큐 처리하는가
 - [ ] 로컬 `<video>` 에 `muted`, 모두에 `autoplay playsinline` 을 줬는가
 - [ ] `localhost` 또는 `https` 로 접속했는가
+- [ ] 서버 실행 모드와 주소가 맞는가 (`npm start` ↔ `http://`, `npm run start:https` ↔ `https://`)
+- [ ] 다른 PC 에서 새 버전을 받았다면 `npm install` 을 다시 했는가 (`selfsigned` 의존성 추가됨)
 - [ ] 다른 PC 라면 방화벽이 3000 포트를 허용하는가
 - [ ] 다른 네트워크라면 STUN/TURN 과 외부에서 접근 가능한 시그널링 주소가 있는가
 - [ ] TURN 이라면 `TURN_SECRET` 과 `static-auth-secret` 이 같은가, `external-ip` 가 맞는가

@@ -3,11 +3,12 @@
 ## 1. 전체 구조
 
 ```
- ┌───────────┐   HTTP: 페이지, /ice-config    ┌────────────────────────┐
+ ┌───────────┐  HTTP(S): 페이지, /ice-config  ┌────────────────────────┐
  │ Browser A │◄──────────────────────────────►│ Node.js (server.js)     │
- │           │   WebSocket: offer/answer/ICE  │  - Express 정적 서빙      │
+ │           │  ws(s): offer/answer/ICE       │  - Express 정적 서빙      │
  └─────┬─────┘◄──────────────────────────────►│  - ws 시그널링 (최대 2명) │
        │                                      │  - ICE 서버 설정 발급      │
+       │                                      │  - HTTPS 모드 (인증서)    │
        │                                      └────────────────────────┘
        │        ┌────────────────┐                       ▲
        │        │ coturn (Docker) │  STUN/TURN            │ 동일
@@ -21,9 +22,10 @@
 
 ```
 영상/
-├─ server.js             # Express + WebSocket 시그널링 + /ice-config
-├─ package.json          # npm start (.env 자동 로드), npm run turn
-├─ .env.example          # STUN/TURN 설정 예시 (.env 로 복사해 사용, git 제외)
+├─ server.js             # Express + WebSocket 시그널링 + /ice-config + HTTPS 모드
+├─ package.json          # npm start (.env 자동 로드), npm run start:https, npm run turn
+├─ .env.example          # 포트·HTTPS·STUN/TURN 설정 예시 (.env 로 복사해 사용, .env 는 git 제외)
+├─ cert/                 # HTTPS 모드에서 자동 생성되는 자체 서명 인증서·개인키 (git 제외)
 ├─ turn/
 │  ├─ turnserver.conf    # coturn 설정 (static-auth-secret, 릴레이 포트 범위)
 │  └─ run-coturn.ps1     # coturn Docker 실행 스크립트 (PC IP 자동 감지)
@@ -47,6 +49,24 @@
 | 방 관리 | 접속자 최대 2명. 세 번째 접속은 `full` 응답 후 종료 |
 | 역할 결정 | 두 번째 사람이 들어오면 **먼저 있던 사람에게 `ready`** → 그쪽이 offer 생성(caller) |
 | ICE 설정 | `GET /ice-config` → `{ iceServers: [...] }` (`.env` 기반, TURN 임시 자격증명 포함) |
+| HTTPS 모드 | `--https` 또는 `HTTPS=1` 이면 `https.createServer`. 인증서는 `TLS_CERT`/`TLS_KEY` 또는 `cert/` 자동 생성분 |
+
+### 3.1-1 시작 흐름 (`main()`)
+
+```
+main()
+ ├─ HTTPS 모드?
+ │   ├─ 예 → loadTls()
+ │   │       ├─ TLS_CERT/TLS_KEY 지정 → 그 파일 사용
+ │   │       ├─ cert/selfsigned.* 존재 + 현재 IP 모두 포함 + 만료 1일 이상 남음 → 재사용
+ │   │       └─ 그 외 → selfsigned.generate() (SAN: localhost, 127.0.0.1, 모든 LAN IPv4) → cert/ 에 저장
+ │   │     → https.createServer({ cert, key }, app)
+ │   └─ 아니오 → http.createServer(app)
+ ├─ new WebSocketServer({ server }) → onConnection (시그널링)
+ └─ listen(PORT) → 접속 주소 출력 (localhost + 각 LAN IP), STUN/TURN 설정 출력
+```
+
+같은 포트에서 HTTP 와 HTTPS 를 동시에 받지 않습니다. 실행 모드에 맞는 주소(`http://` 또는 `https://`)로 접속해야 합니다.
 
 ### 3.2 시그널링 메시지
 
