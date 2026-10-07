@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebRTC 로컬 맛보기</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="hero">
+        <p class="eyebrow">LOCAL WEBRTC LAB</p>
+        <h1>두 개의 탭, 하나의 영상 연결</h1>
+        <p class="description">
+          STUN/TURN 없이 localhost에서 Offer, Answer, ICE 교환 과정을 확인하는 학습 예제입니다.
+        </p>
+      </header>
+
+      <section class="join-panel" aria-label="방 입장">
+        <label for="roomInput">방 이름</label>
+        <div class="join-row">
+          <input id="roomInput" value="study-room" maxlength="40" autocomplete="off" />
+          <button id="joinButton" class="primary">카메라 켜고 입장</button>
+        </div>
+        <p id="status" class="status" data-state="idle">입장 버튼을 눌러 시작하세요.</p>
+      </section>
+
+      <section class="video-grid" aria-label="영상 통화">
+        <article class="video-card">
+          <div class="video-heading">
+            <span>내 화면</span>
+            <span class="badge">LOCAL</span>
+          </div>
+          <div class="video-frame">
+            <video id="localVideo" autoplay muted playsinline></video>
+            <p id="localPlaceholder" class="placeholder">카메라 대기 중</p>
+          </div>
+        </article>
+
+        <article class="video-card">
+          <div class="video-heading">
+            <span>상대 화면</span>
+            <span class="badge remote">REMOTE</span>
+          </div>
+          <div class="video-frame">
+            <video id="remoteVideo" autoplay playsinline></video>
+            <p id="remotePlaceholder" class="placeholder">상대방 대기 중</p>
+          </div>
+        </article>
+      </section>
+
+      <section class="controls" aria-label="통화 제어">
+        <button id="micButton" disabled>마이크 끄기</button>
+        <button id="cameraButton" disabled>카메라 끄기</button>
+        <button id="leaveButton" class="danger" disabled>통화 종료</button>
+      </section>
+
+      <details class="log-panel" open>
+        <summary>연결 과정 로그</summary>
+        <ol id="eventLog" aria-live="polite"></ol>
+      </details>
+
+      <section class="how-to">
+        <h2>테스트 방법</h2>
+        <ol>
+          <li>이 페이지를 브라우저 탭 두 개에서 엽니다.</li>
+          <li>두 탭에서 같은 방 이름으로 입장합니다.</li>
+          <li>카메라 권한을 허용하고 상대 영상이 나타나는지 확인합니다.</li>
+        </ol>
+      </section>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>

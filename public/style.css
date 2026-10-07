@@ -81,6 +81,12 @@ video {
 }
 
 .hint { margin-top: 6px; color: #b36b00; }
+.error {
+  margin-bottom: 12px; padding: 10px 12px;
+  background: #fdecec; border: 1px solid #e8a0a0; border-radius: 6px;
+  color: #a12626; font-size: 14px; line-height: 1.5; white-space: pre-line;
+}
+.error[hidden] { display: none; }
 summary { cursor: pointer; font-size: 15px; margin: 16px 0 6px; font-weight: 600; }
 
 @media (max-width: 640px) {

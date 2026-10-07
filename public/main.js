@@ -24,13 +24,22 @@ function log(msg) {
   logEl.scrollTop = logEl.scrollHeight;
 }
 
-// 버튼 상태: init → camera → waiting → connected
+function showError(msg) {
+  const el = $('error');
+  el.textContent = msg;
+  el.hidden = !msg;
+  if (msg) log(`⚠ ${msg.split('\n')[0]}`);
+}
+
+// 버튼 상태: init → camera(또는 nocam) → waiting → connected
+// nocam: 카메라를 못 얻었지만 영상 수신 전용으로 접속은 가능
 function setUi(mode) {
-  btnStart.disabled = mode !== 'init';
-  btnJoin.disabled = mode !== 'camera';
-  btnMute.disabled = mode !== 'connected';
+  const canJoin = mode === 'camera' || mode === 'nocam';
+  btnStart.disabled = mode !== 'init' && mode !== 'nocam';
+  btnJoin.disabled = !canJoin;
+  btnMute.disabled = mode !== 'connected' || !localStream;
   btnHangup.disabled = mode === 'init' || mode === 'camera';
-  $('hint').textContent = mode === 'waiting' ? '상대를 기다리는 중… 다른 탭에서 접속하세요.' : '';
+  $('hint').textContent = mode === 'waiting' ? '상대를 기다리는 중… 다른 탭/PC에서 접속하세요.' : '';
 }
 
 function setWsState(open) {
@@ -40,12 +49,25 @@ function setWsState(open) {
 
 // ---------- 단계 1: 카메라 ----------
 async function startCamera() {
+  showError('');
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showError(
+      `이 주소(${location.origin})는 보안 연결이 아니라서 브라우저가 카메라를 막습니다.\n` +
+      '카메라는 https:// 또는 http://localhost 에서만 사용할 수 있습니다.\n' +
+      '→ 해결: HTTPS 터널(cloudflared/ngrok)이나 https 로 접속하세요.\n' +
+      '→ 지금은 카메라 없이 [접속]을 눌러 상대 영상만 받을 수 있습니다.'
+    );
+    return setUi('nocam');
+  }
   try {
     localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
   } catch (err) {
-    log(`카메라 실패: ${err.name} - ${err.message}`);
-    if (err.name === 'NotReadableError') log('→ 같은 PC에서 탭 2개를 열면 카메라 점유로 실패할 수 있습니다. 다른 브라우저/프로필을 쓰거나 한쪽은 카메라 없이 시험하세요.');
-    return;
+    let why = `${err.name} - ${err.message}`;
+    if (err.name === 'NotAllowedError') why = '카메라/마이크 권한이 거부되었습니다. 주소창의 권한 설정에서 허용해 주세요.';
+    if (err.name === 'NotFoundError') why = '사용 가능한 카메라/마이크가 없습니다.';
+    if (err.name === 'NotReadableError') why = '다른 앱/탭이 카메라를 사용 중입니다. 같은 PC에서 탭 2개를 열면 생길 수 있으니 다른 브라우저/프로필을 쓰세요.';
+    showError(`카메라를 켜지 못했습니다: ${why}\n카메라 없이 [접속]을 눌러 상대 영상만 받을 수도 있습니다.`);
+    return setUi('nocam');
   }
   localVideo.srcObject = localStream;
   log('카메라 켜짐');
@@ -58,12 +80,25 @@ function sendSignal(obj) {
 }
 
 function join() {
+  showError('');
+  if (location.protocol === 'file:') {
+    return showError('index.html 을 파일로 직접 열었습니다. 서버를 실행(npm start)하고 http://localhost:3000 으로 접속하세요.');
+  }
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-  ws = new WebSocket(`${proto}://${location.host}`);
+  log(`시그널링 접속 시도: ${proto}://${location.host}`);
+  try {
+    ws = new WebSocket(`${proto}://${location.host}`);
+  } catch (err) {
+    return showError(`시그널링 주소가 올바르지 않습니다: ${err.message}`);
+  }
   createPc(); // answer 쪽도 offer 를 받기 전에 pc 와 트랙이 준비되어 있어야 한다
   setUi('waiting');
 
-  ws.onopen = () => { setWsState(true); log('시그널링 연결됨'); };
+  let opened = false;
+  ws.onopen = () => { opened = true; setWsState(true); log('시그널링 연결됨'); };
+  ws.onerror = () => {
+    if (!opened) showError('시그널링 서버에 연결하지 못했습니다. 서버(npm start)가 실행 중인지, 방화벽이 3000 포트를 막지 않는지 확인하세요.');
+  };
   ws.onclose = () => { setWsState(false); log('시그널링 끊김'); };
   ws.onmessage = (e) => onSignal(JSON.parse(e.data)).catch((err) => log(`시그널 처리 실패: ${err.name} - ${err.message}`));
 }
@@ -74,7 +109,13 @@ function createPc() {
   pendingCandidates = [];
 
   // 반드시 createOffer/createAnswer 이전에 addTrack
-  localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
+  if (localStream) {
+    localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
+  } else {
+    // 카메라 없이 접속: 보내지 않고 받기만 한다
+    pc.addTransceiver('video', { direction: 'recvonly' });
+    pc.addTransceiver('audio', { direction: 'recvonly' });
+  }
 
   pc.onicecandidate = (e) => {
     if (!e.candidate) return log('ICE 수집 완료');
@@ -192,7 +233,7 @@ function resetPeer() {
 }
 
 function toggleMute() {
-  const audio = localStream.getAudioTracks()[0];
+  const audio = localStream && localStream.getAudioTracks()[0];
   if (!audio) return;
   audio.enabled = !audio.enabled;
   btnMute.textContent = audio.enabled ? '🎤 음소거' : '🔇 음소거 해제';
