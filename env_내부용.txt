@@ -1,0 +1,12 @@
+# .env.example 을 바탕으로 만든 로컬 설정 (git 에 올리지 않음)
+PORT=3000
+
+STUN_URLS=stun:stun.l.google.com:19302
+
+# 로컬 coturn (npm run turn)
+TURN_URLS=turn:192.168.5.31:3478?transport=udp,turn:192.168.5.31:3478?transport=tcp
+TURN_SECRET=change-me-study-secret
+TURN_TTL=3600
+
+TURN_USER=
+TURN_PASS=
