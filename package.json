@@ -1,0 +1,12 @@
+{
+  "name": "webrtc-study",
+  "version": "1.0.0",
+  "description": "WebRTC 스터디 예제 - 단계 1~2: 카메라 + 한 페이지 loopback",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

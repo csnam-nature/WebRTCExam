@@ -1,0 +1,65 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0 auto;
+  max-width: 960px;
+  padding: 16px;
+  font-family: system-ui, "Malgun Gothic", sans-serif;
+  background: #f5f6f8;
+  color: #1f2430;
+}
+
+h1 { margin: 0 0 4px; font-size: 22px; }
+h2 { font-size: 15px; margin: 16px 0 6px; }
+.sub { margin: 0 0 16px; color: #667; font-size: 14px; }
+
+.controls { display: flex; gap: 8px; margin-bottom: 16px; }
+
+button {
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 6px;
+  background: #2f6fed;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
+button:disabled { background: #b8bfcc; cursor: not-allowed; }
+#btnHangup { background: #d64545; }
+#btnHangup:disabled { background: #b8bfcc; }
+
+.videos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+figure { margin: 0; }
+figcaption { font-size: 13px; color: #556; margin-bottom: 4px; }
+
+video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: #111;
+  border-radius: 8px;
+}
+#local { transform: scaleX(-1); } /* 거울 모드: 로컬 영상에만 */
+
+.status { margin-top: 12px; font-size: 14px; }
+
+#log {
+  height: 260px;
+  margin: 0;
+  padding: 10px;
+  overflow: auto;
+  background: #111;
+  color: #cfe3cf;
+  border-radius: 8px;
+  font: 12px/1.5 Consolas, monospace;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+@media (max-width: 640px) {
+  .videos { grid-template-columns: 1fr; }
+}
