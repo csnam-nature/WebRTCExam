@@ -13,6 +13,7 @@
 | [04-network-access.md](04-network-access.md) | 다른 PC 접속: secure context(HTTPS), 방화벽, 다른 네트워크 |
 | [05-troubleshooting.md](05-troubleshooting.md) | 실습 중 겪은 문제와 해결, 자주 막히는 지점 |
 | [06-verification.md](06-verification.md) | 단계별 검증 방법과 결과 |
+| [07-cloudflared-tunnel.md](07-cloudflared-tunnel.md) | cloudflared 터널로 외부망(다른 네트워크)에서 접속하기 |
 
 ## 학습 단계
 

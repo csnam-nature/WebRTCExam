@@ -76,6 +76,7 @@ npm run start:https          # 또는 .env 에 HTTPS=1 후 npm start
 | TURN | NAT 조합·방화벽으로 STUN 만으로 안 되는 경우(약 15~20%) | 공인 IP 서버의 coturn 또는 관리형 TURN |
 
 > 터널은 **시그널링(웹페이지·WebSocket)만** 전달합니다. 영상은 P2P(srflx) 또는 TURN 으로 따로 흐릅니다.
+> 터널 사용법은 [07-cloudflared-tunnel.md](07-cloudflared-tunnel.md) 참고.
 
 > 로컬 Docker coturn 은 relay 주소를 사설 IP(`192.168.x.x`)로 광고하므로 **같은 LAN 안에서만** 쓸 수 있습니다.
 
