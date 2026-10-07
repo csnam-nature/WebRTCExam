@@ -3,39 +3,43 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>WebRTC 맛보기 · Loopback</title>
+  <title>WebRTC 맛보기 · 1:1 통화</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <h1>WebRTC 맛보기 · Loopback</h1>
-    <p class="sub">한 페이지 안의 pc1(송신) → pc2(수신). 시그널링 서버 없이 SDP를 직접 전달합니다.</p>
+  <header class="head-row">
+    <div>
+      <h1>WebRTC 맛보기 · 1:1 통화</h1>
+      <p class="sub">탭(또는 브라우저) 2개를 열어 각각 <b>카메라 켜기 → 접속</b>을 누르세요. <a href="loopback.html">단계 2 loopback</a></p>
+    </div>
+    <div class="ws-badge"><span id="wsDot" class="dot"></span><span id="wsState">시그널링: 끊김</span></div>
   </header>
+
+  <section class="stage">
+    <video id="remote" autoplay playsinline></video>
+    <div id="placeholder" class="placeholder">상대 영상 없음</div>
+    <video id="local" class="pip" autoplay playsinline muted></video>
+  </section>
 
   <section class="controls">
     <button id="btnStart">카메라 켜기</button>
-    <button id="btnCall" disabled>연결 시작</button>
-    <button id="btnHangup" disabled>종료</button>
-  </section>
-
-  <section class="videos">
-    <figure>
-      <figcaption>Local (pc1 송신)</figcaption>
-      <video id="local" autoplay playsinline muted></video>
-    </figure>
-    <figure>
-      <figcaption>Remote (pc2 수신)</figcaption>
-      <video id="remote" autoplay playsinline></video>
-    </figure>
+    <button id="btnJoin" disabled>접속</button>
+    <button id="btnMute" disabled>🎤 음소거</button>
+    <button id="btnHangup" disabled>📞 종료</button>
   </section>
 
   <section class="status">
-    상태: pc1 <b id="state1">-</b> · pc2 <b id="state2">-</b>
+    연결 상태: <b id="state">-</b> ·
+    ICE: <b id="iceInfo">-</b> ·
+    역할: <b id="role">-</b>
+    <div id="hint" class="hint"></div>
   </section>
 
   <section>
-    <h2>로그</h2>
-    <pre id="log"></pre>
+    <details open>
+      <summary>로그</summary>
+      <pre id="log"></pre>
+    </details>
   </section>
 
   <script src="main.js"></script>

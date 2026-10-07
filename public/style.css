@@ -60,6 +60,29 @@ video {
   word-break: break-all;
 }
 
+/* ---- 1:1 통화 화면 (index.html) ---- */
+.head-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.ws-badge { font-size: 13px; display: flex; align-items: center; gap: 6px; padding-top: 6px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: #b8bfcc; }
+.dot.on { background: #2fb344; }
+
+.stage { position: relative; margin-bottom: 12px; }
+.stage #remote { transform: none; }
+.placeholder {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: #8a93a6; font-size: 15px; pointer-events: none;
+}
+.placeholder[hidden] { display: none; }
+.pip {
+  position: absolute; right: 12px; bottom: 12px;
+  width: 24%; min-width: 120px;
+  border: 2px solid #fff;
+}
+
+.hint { margin-top: 6px; color: #b36b00; }
+summary { cursor: pointer; font-size: 15px; margin: 16px 0 6px; font-weight: 600; }
+
 @media (max-width: 640px) {
   .videos { grid-template-columns: 1fr; }
 }
