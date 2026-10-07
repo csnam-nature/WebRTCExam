@@ -1,10 +1,14 @@
 {
   "name": "webrtc-study",
   "version": "1.0.0",
-  "description": "WebRTC 스터디 예제 - 로컬 1:1 영상 통화 (loopback + WebSocket 시그널링)",
+  "description": "WebRTC 스터디 예제 - 1:1 영상 통화 (loopback, WebSocket 시그널링, STUN/TURN)",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node --env-file-if-exists=.env server.js",
+    "turn": "powershell -ExecutionPolicy Bypass -File turn/run-coturn.ps1"
+  },
+  "engines": {
+    "node": ">=22.9"
   },
   "dependencies": {
     "express": "^4.19.2",

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ICE 후보 수집 테스트</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>ICE 후보 수집 테스트</h1>
+    <p class="sub">상대 없이 STUN/TURN 설정이 동작하는지 확인합니다. <a href="index.html">1:1 통화로</a></p>
+  </header>
+
+  <section>
+    <label class="field-label" for="cfg">RTCPeerConnection 설정 (서버 /ice-config 값. 직접 고쳐서 시험해도 됩니다)</label>
+    <textarea id="cfg" rows="9" spellcheck="false"></textarea>
+  </section>
+
+  <section class="controls">
+    <button id="btnGather">후보 수집</button>
+    <button id="btnReload" class="secondary">서버 설정 다시 불러오기</button>
+    <label class="chk"><input type="checkbox" id="chkRelay"> TURN만 사용(relay 강제)</label>
+  </section>
+
+  <section id="summary" class="summary">아직 수집하지 않았습니다.</section>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>타입</th><th>프로토콜</th><th>주소:포트</th><th>관련 주소</th><th>서버 URL</th><th>시간</th></tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <h2>ICE 서버 오류</h2>
+  <pre id="errors" class="errors">-</pre>
+
+  <section class="guide">
+    <h2>결과 읽는 법</h2>
+    <ul>
+      <li><b>host</b>: 내 PC의 로컬 주소. 같은 네트워크 안에서만 쓸 수 있습니다. (브라우저가 mDNS 이름 <code>xxxx.local</code>로 가립니다)</li>
+      <li><b>srflx</b>: STUN 서버가 알려준 <b>공인 IP:포트</b>. 이게 나오면 STUN 정상입니다. 관련 주소는 그 공인 주소에 대응하는 내 로컬 주소입니다.</li>
+      <li><b>relay</b>: TURN 서버가 내준 <b>중계 주소</b>. 이게 나오면 TURN 서버 접속과 인증이 정상입니다.</li>
+      <li>오류 <b>701</b>: 서버에 닿지 못함 (주소/포트 오타, 방화벽, 서버 꺼짐). 사용하지 않는 네트워크 어댑터(IPv6 등)에서 함께 뜨는 경우는 무시해도 됩니다.</li>
+      <li>오류 <b>401</b>: TURN 인증 실패 (TURN_SECRET 이 turnserver.conf 와 다르거나 자격증명 만료).</li>
+      <li>참고: 통화 화면에서 같은 PC/같은 LAN 끼리는 host 연결이 수 ms 만에 성공해서, STUN 응답이 오기 전에 수집이 끝나 <b>srflx 가 안 보일 수 있습니다</b>. 정상입니다. STUN 동작 확인은 이 페이지에서 하세요.</li>
+    </ul>
+  </section>
+
+  <script src="ice-test.js"></script>
+</body>
+</html>

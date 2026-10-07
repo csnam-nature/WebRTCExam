@@ -1,5 +1,5 @@
-// 단계 3~5: WebSocket 시그널링으로 두 탭 연결 (1:1 통화)
-// iceServers 는 비워 둔다 (host 후보만). STUN/TURN 은 이후 단계에서 추가.
+// 단계 3~6: WebSocket 시그널링으로 두 탭/PC 연결 (1:1 통화) + STUN/TURN
+// ICE 서버 목록은 서버의 /ice-config 에서 받아온다 (.env 로 설정).
 
 const $ = (id) => document.getElementById(id);
 const localVideo = $('local');
@@ -8,14 +8,15 @@ const btnStart = $('btnStart');
 const btnJoin = $('btnJoin');
 const btnMute = $('btnMute');
 const btnHangup = $('btnHangup');
+const chkRelay = $('chkRelay');
 const logEl = $('log');
 
-const RTC_CONFIG = { iceServers: [] };
-
+let rtcConfig = { iceServers: [] };
 let localStream = null;
 let ws = null;
 let pc = null;
 let pendingCandidates = [];
+let candCount = {};
 let isCaller = false;
 
 function log(msg) {
@@ -39,6 +40,7 @@ function setUi(mode) {
   btnJoin.disabled = !canJoin;
   btnMute.disabled = mode !== 'connected' || !localStream;
   btnHangup.disabled = mode === 'init' || mode === 'camera';
+  chkRelay.disabled = mode === 'waiting' || mode === 'connected'; // 정책은 pc 생성 시점에만 적용된다
   $('hint').textContent = mode === 'waiting' ? '상대를 기다리는 중… 다른 탭/PC에서 접속하세요.' : '';
 }
 
@@ -79,16 +81,42 @@ function sendSignal(obj) {
   if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(obj));
 }
 
-function join() {
+// ---------- 단계 6: STUN/TURN 설정 받기 ----------
+async function loadIceConfig() {
+  let iceServers = [];
+  try {
+    const res = await fetch('/ice-config', { cache: 'no-store' });
+    iceServers = (await res.json()).iceServers;
+  } catch (err) {
+    log(`ICE 설정을 받지 못했습니다 (${err.message}) → host 후보만 사용`);
+  }
+  rtcConfig = { iceServers, iceTransportPolicy: chkRelay.checked ? 'relay' : 'all' };
+
+  const urls = iceServers.flatMap((s) => [].concat(s.urls)); // 자격증명은 화면/로그에 남기지 않는다
+  $('iceServers').textContent = urls.length ? urls.join(', ') : '(없음: host 후보만)';
+  log(`ICE 서버: ${urls.join(', ') || '(없음)'} · 정책: ${rtcConfig.iceTransportPolicy}`);
+
+  if (chkRelay.checked && !urls.some((u) => u.startsWith('turn'))) {
+    showError('[TURN만 사용]을 켰지만 TURN 서버가 설정되어 있지 않습니다.\n→ .env 의 TURN_URLS 를 설정하고 서버를 다시 시작하거나, 체크를 해제하세요.');
+    return false;
+  }
+  return true;
+}
+
+async function join() {
   showError('');
   if (location.protocol === 'file:') {
     return showError('index.html 을 파일로 직접 열었습니다. 서버를 실행(npm start)하고 http://localhost:3000 으로 접속하세요.');
   }
+  btnJoin.disabled = true; // 설정을 받는 동안 중복 클릭 방지
+  if (!(await loadIceConfig())) return setUi(localStream ? 'camera' : 'nocam');
+
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
   log(`시그널링 접속 시도: ${proto}://${location.host}`);
   try {
     ws = new WebSocket(`${proto}://${location.host}`);
   } catch (err) {
+    setUi(localStream ? 'camera' : 'nocam');
     return showError(`시그널링 주소가 올바르지 않습니다: ${err.message}`);
   }
   createPc(); // answer 쪽도 offer 를 받기 전에 pc 와 트랙이 준비되어 있어야 한다
@@ -104,9 +132,16 @@ function join() {
 }
 
 // ---------- 단계 4: PeerConnection ----------
+function updateCandStats() {
+  const parts = Object.entries(candCount).filter(([, n]) => n).map(([t, n]) => `${t} ${n}`);
+  $('candStats').textContent = parts.join(' · ') || '-';
+}
+
 function createPc() {
-  pc = new RTCPeerConnection(RTC_CONFIG);
+  pc = new RTCPeerConnection(rtcConfig);
   pendingCandidates = [];
+  candCount = { host: 0, srflx: 0, relay: 0 };
+  updateCandStats();
 
   // 반드시 createOffer/createAnswer 이전에 addTrack
   if (localStream) {
@@ -119,8 +154,16 @@ function createPc() {
 
   pc.onicecandidate = (e) => {
     if (!e.candidate) return log('ICE 수집 완료');
-    log(`내 candidate [${e.candidate.type}] ${e.candidate.address}:${e.candidate.port}`);
-    sendSignal({ type: 'candidate', candidate: e.candidate });
+    const c = e.candidate;
+    candCount[c.type] = (candCount[c.type] || 0) + 1;
+    updateCandStats();
+    log(`내 candidate [${c.type}] ${c.address}:${c.port} (${c.protocol})`);
+    sendSignal({ type: 'candidate', candidate: c });
+  };
+
+  // STUN/TURN 서버와 통신이 실패했을 때. 701: 서버에 닿지 못함, 401: TURN 인증 실패
+  pc.onicecandidateerror = (e) => {
+    log(`ICE 서버 오류 ${e.errorCode} ${e.errorText || ''} (${e.url})`);
   };
 
   pc.ontrack = (e) => {
@@ -133,8 +176,16 @@ function createPc() {
     $('state').textContent = pc.connectionState;
     log(`connectionState: ${pc.connectionState}`);
     if (pc.connectionState === 'connected') {
+      showError('');
       setUi('connected');
       showSelectedPair();
+    }
+    if (pc.connectionState === 'failed') {
+      showError(
+        '연결 실패(ICE failed): 두 피어 사이에 통하는 경로를 찾지 못했습니다.\n' +
+        '→ 서로 다른 네트워크라면 STUN 만으로는 부족할 수 있습니다. TURN 서버를 설정하세요.\n' +
+        '→ [TURN만 사용]을 켰다면 TURN 주소·포트·인증을 확인하세요 (로그의 "ICE 서버 오류" 참고).'
+      );
     }
   };
 }
@@ -199,7 +250,7 @@ async function onSignal(msg) {
 
     case 'leave': // 상대가 나감: 다음 상대를 받을 수 있게 pc 를 새로 만들고 대기
       log('상대가 나갔습니다');
-      resetPeer();
+      await resetPeer();
       break;
   }
 }
@@ -215,12 +266,18 @@ async function showSelectedPair() {
   if (!pair) return;
   const l = stats.get(pair.localCandidateId);
   const r = stats.get(pair.remoteCandidateId);
-  $('iceInfo').textContent = `${l.candidateType} ↔ ${r.candidateType}`;
-  const addr = (c) => (c.address ? `(${c.address})` : '(주소 숨김: mDNS)');
-  log(`선택된 후보 쌍: ${l.candidateType}${addr(l)} ↔ ${r.candidateType}${addr(r)}`);
+  const types = [l.candidateType, r.candidateType];
+  // 영상이 실제로 어느 길로 흐르는지
+  const path = types.includes('relay') ? 'TURN 서버 경유'
+    : types.includes('srflx') ? 'P2P (STUN 공인 주소)'
+    : 'P2P 직접';
+  $('iceInfo').textContent = `${l.candidateType} ↔ ${r.candidateType} · ${path}`;
+  const addr = (c) => (c.address ? `(${c.address}:${c.port})` : '(주소 숨김: mDNS)');
+  const relay = l.candidateType === 'relay' && l.relayProtocol ? ` [TURN ${l.relayProtocol}]` : '';
+  log(`선택된 후보 쌍: ${l.candidateType}${addr(l)}${relay} ↔ ${r.candidateType}${addr(r)} → ${path}`);
 }
 
-function resetPeer() {
+async function resetPeer() {
   if (pc) pc.close();
   remoteVideo.srcObject = null;
   $('placeholder').hidden = false;
@@ -228,6 +285,7 @@ function resetPeer() {
   $('iceInfo').textContent = '-';
   $('role').textContent = '-';
   btnMute.textContent = '🎤 음소거';
+  await loadIceConfig(); // TURN 임시 자격증명이 만료됐을 수 있으니 다시 받는다
   createPc();
   setUi('waiting');
 }
@@ -254,6 +312,7 @@ function hangup() {
   $('state').textContent = '-';
   $('iceInfo').textContent = '-';
   $('role').textContent = '-';
+  $('candStats').textContent = '-';
   btnMute.textContent = '🎤 음소거';
   setUi('init');
   log('종료');

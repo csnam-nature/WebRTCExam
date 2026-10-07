@@ -13,7 +13,10 @@ h1 { margin: 0 0 4px; font-size: 22px; }
 h2 { font-size: 15px; margin: 16px 0 6px; }
 .sub { margin: 0 0 16px; color: #667; font-size: 14px; }
 
-.controls { display: flex; gap: 8px; margin-bottom: 16px; }
+.controls { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+.chk { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; cursor: pointer; }
+.chk:has(input:disabled) { color: #99a; cursor: not-allowed; }
+button.secondary { background: #e3e7ef; color: #1f2430; }
 
 button {
   padding: 8px 16px;
@@ -88,6 +91,34 @@ video {
 }
 .error[hidden] { display: none; }
 summary { cursor: pointer; font-size: 15px; margin: 16px 0 6px; font-weight: 600; }
+
+/* ---- ICE 테스트 화면 (ice-test.html) ---- */
+.field-label { display: block; font-size: 13px; color: #556; margin-bottom: 4px; }
+textarea {
+  width: 100%; padding: 10px; margin-bottom: 12px;
+  border: 1px solid #ccd2dd; border-radius: 6px;
+  font: 12px/1.5 Consolas, monospace; resize: vertical;
+}
+.summary {
+  margin-bottom: 12px; padding: 10px 12px;
+  background: #fff; border: 1px solid #dde2ea; border-radius: 6px;
+  font-size: 14px; line-height: 1.6; white-space: pre-line;
+}
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; background: #fff; font-size: 13px; }
+th, td { padding: 6px 8px; border-bottom: 1px solid #e6e9ef; text-align: left; word-break: break-all; }
+th { background: #eef1f6; font-weight: 600; white-space: nowrap; }
+tr.t-host td:first-child { color: #556; }
+tr.t-srflx td:first-child { color: #1d7a35; font-weight: 600; }
+tr.t-relay td:first-child { color: #2f6fed; font-weight: 600; }
+.errors {
+  margin: 0; padding: 10px; max-height: 160px; overflow: auto;
+  background: #111; color: #f3b0b0; border-radius: 8px;
+  font: 12px/1.5 Consolas, monospace; white-space: pre-wrap; word-break: break-all;
+}
+.guide { font-size: 14px; line-height: 1.6; }
+.guide ul { padding-left: 20px; margin: 0; }
+code { background: #e9ecf2; padding: 1px 4px; border-radius: 3px; }
 
 @media (max-width: 640px) {
   .videos { grid-template-columns: 1fr; }
