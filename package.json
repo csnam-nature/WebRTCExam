@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node --env-file-if-exists=.env server.js",
+    "start:https": "node --env-file-if-exists=.env server.js --https",
     "turn": "powershell -ExecutionPolicy Bypass -File turn/run-coturn.ps1"
   },
   "engines": {
@@ -12,6 +13,7 @@
   },
   "dependencies": {
     "express": "^4.19.2",
+    "selfsigned": "^5.5.0",
     "ws": "^8.22.0"
   }
 }

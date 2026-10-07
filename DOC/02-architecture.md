@@ -160,6 +160,8 @@ init ──카메라 켜기──► camera ──접속──► waiting ──
 | 변수 | 기본값 | 설명 |
 |---|---|---|
 | `PORT` | `3000` | 서버 포트 |
+| `HTTPS` | (없음) | `1` 이면 HTTPS 모드 (`npm run start:https` 와 같음) |
+| `TLS_CERT` / `TLS_KEY` | (없음) | 사용할 인증서/키 경로. 없으면 `cert/` 에 자체 서명 인증서 자동 생성 |
 | `STUN_URLS` | `stun:stun.l.google.com:19302` | 쉼표 구분. **빈 값이면 STUN 끔** |
 | `TURN_URLS` | (없음) | 예: `turn:192.168.x.x:3478?transport=udp,turn:192.168.x.x:3478?transport=tcp` |
 | `TURN_SECRET` | (없음) | coturn `static-auth-secret` 과 같은 값 → 시간제한 자격증명 발급 |

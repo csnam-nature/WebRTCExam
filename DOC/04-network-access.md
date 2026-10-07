@@ -22,11 +22,32 @@ IP 주소로 접속하면 연결은 되지만 카메라가 막힙니다.
 
 | 방법 | 방법 요약 | 장단점 |
 |---|---|---|
-| 터널 (cloudflared / ngrok) | `cloudflared tunnel --url http://localhost:3000` → `https://xxxx.trycloudflare.com` | 가장 쉬움, 코드 수정 없음 (`wss` 자동 선택) |
-| mkcert | `mkcert 192.168.x.x localhost` 로 인증서 생성, `https.createServer` 로 변경 | 상대 PC 에 루트 CA 설치 또는 경고 무시 필요 |
+| **내장 HTTPS 모드 (권장)** | 서버 PC 에서 `npm run start:https` → 다른 PC 에서 `https://192.168.x.x:3000` | 설치 없음. 자체 서명 인증서 경고를 한 번 넘겨야 함 |
+| 터널 (cloudflared / ngrok) | `cloudflared tunnel --url http://localhost:3000` → `https://xxxx.trycloudflare.com` | 경고 없음, 코드 수정 없음 (`wss` 자동 선택). 별도 프로그램 필요 |
+| mkcert | `mkcert 192.168.x.x localhost` 로 인증서 생성 → `.env` 에 `TLS_CERT`, `TLS_KEY` 지정 후 `npm run start:https` | 상대 PC 에 mkcert 루트 CA 를 설치하면 경고 없음 |
 | Chrome 플래그 (임시) | 상대 PC `chrome://flags/#unsafely-treat-insecure-origin-as-secure` 에 `http://192.168.x.x:3000` 등록 | 스터디용. 브라우저 재시작 필요 |
 
 4. 영상 경로: 같은 LAN 이면 `host ↔ host` 로 직접 연결 (STUN/TURN 불필요)
+
+### 내장 HTTPS 모드 상세
+
+```bash
+npm run start:https          # 또는 .env 에 HTTPS=1 후 npm start
+```
+
+- 실행하면 접속 가능한 주소가 출력됩니다: `https://192.168.x.x:3000   ← 다른 PC 에서 접속`
+- 인증서 선택 순서
+  1. `.env` 의 `TLS_CERT` / `TLS_KEY` (mkcert 등)
+  2. 없으면 `cert/selfsigned.crt`, `cert/selfsigned.key` 를 **자동 생성**
+     (SAN: `localhost`, `127.0.0.1`, 이 PC 의 모든 LAN IPv4, 유효기간 1년, `selfsigned` 패키지 사용)
+- 다음 실행부터는 같은 인증서를 **재사용**합니다. 브라우저에서 승인한 예외가 유지되도록 하기 위해서입니다.
+  IP 가 바뀌었거나 만료가 1일 이내로 다가오면 다시 만듭니다.
+- `cert/` 에는 개인키가 들어 있으므로 git 에서 제외합니다 (`.gitignore`).
+- 브라우저 경고("연결이 비공개로 설정되어 있지 않습니다") → **[고급] → [192.168.x.x(안전하지 않음)(으)로 이동]**
+- HTTPS 페이지에서는 시그널링도 자동으로 `wss://` 를 사용합니다.
+
+> `http` 로 실행 중인 서버에 `https://` 로 접속하면 `ERR_SSL_PROTOCOL_ERROR` 가 납니다.
+> 반대로 HTTPS 모드 서버에는 `http://` 로 접속할 수 없습니다.
 
 ## 3. 경우 2 — 다른 네트워크(다른 공유기, LTE 등)
 

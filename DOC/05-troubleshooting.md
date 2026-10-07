@@ -43,6 +43,13 @@
   - 시그널링 서버 연결 실패, `file://` 로 연 경우도 안내
 - **해결 (환경)**: HTTPS 로 접속 → [04-network-access.md](04-network-access.md)
 
+### 2.1-1 `https://IP:3000` 으로 접속하면 `ERR_SSL_PROTOCOL_ERROR`
+
+- **증상**: "사이트에 보안 연결할 수 없음 — 192.168.x.x에서 잘못된 응답을 전송했습니다"
+- **원인**: 서버가 HTTP 로 실행 중인데 브라우저는 TLS 로 접속 → 서버가 평문으로 응답
+- **해결**: 서버에 HTTPS 모드 추가 → `npm run start:https` 로 실행 후 `https://IP:3000` 접속.
+  자체 서명 인증서 경고는 [고급] → [계속 진행]
+
 ### 2.2 같은 PC 에서 탭 2개로 카메라를 열 수 없음
 
 - **증상**: `NotReadableError`

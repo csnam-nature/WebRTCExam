@@ -1,8 +1,8 @@
 # 06. 검증 방법과 결과
 
 검증은 Chrome 계열 브라우저 탭 2개로 진행했습니다.
-검증 환경에 카메라가 없어 `getUserMedia` 를 **canvas 영상(`canvas.captureStream`)으로 대체**했습니다.
-실제 카메라·마이크(소리 포함)는 사용자 환경에서 별도로 확인이 필요합니다.
+자동 검증 환경에는 카메라가 없어 `getUserMedia` 를 **canvas 영상(`canvas.captureStream`)으로 대체**했습니다.
+실제 카메라로 다른 PC 와 연결하는 것은 사용자 환경에서 확인했습니다 (5.2 참고).
 
 ## 1. 단계 1~2: 카메라 + loopback (`loopback.html`)
 
@@ -66,14 +66,36 @@ relay 후보 주소가 PC 의 LAN IP(`192.168.x.x:491xx`)로 나와 `external-ip
 | `--env-file-if-exists` | `.env` 없을 때도 정상 기동 |
 | `.env` git 제외 | `git check-ignore` 로 확인 |
 
-## 5. 직접 확인하는 방법
+## 5. HTTPS 모드 (다른 PC 접속)
 
-### 5.1 브라우저 도구
+### 5.1 서버 동작
+
+| 항목 | 결과 |
+|---|---|
+| `npm run start:https` | HTTPS 로 기동, 접속 가능한 `https://<IP>:PORT` 주소 출력 |
+| HTTPS 응답 | `/` 200, `/ice-config` 정상 |
+| 자체 서명 인증서 | SAN: `localhost`, `127.0.0.1`, 이 PC 의 모든 LAN IPv4. 유효기간 1년 |
+| 재시작 | `cert/selfsigned.crt (재사용)` — 같은 인증서 유지 |
+| WSS 시그널링 | 두 클라이언트가 `wss://` 로 접속해 `joined`, `ready` 수신 |
+| `cert/` git 제외 | `git check-ignore` 로 확인 |
+| 기존 HTTP 모드 | `npm start` 정상 (회귀 없음) |
+
+### 5.2 사용자 환경 (실제 카메라)
+
+| 항목 | 결과 |
+|---|---|
+| 첫 접속 | `NET::ERR_CERT_AUTHORITY_INVALID` 경고 (자체 서명 인증서라 예상된 동작) |
+| [고급] → [이동] 후 | 페이지 접속, 카메라 사용 가능 |
+| **다른 PC 와 영상 연결** | **성공** (같은 LAN, 실제 카메라) |
+
+## 6. 직접 확인하는 방법
+
+### 6.1 브라우저 도구
 
 - `chrome://webrtc-internals` → `candidate-pair` 중 `state: succeeded`, `nominated: true` 인 쌍이 실제 경로
 - DevTools 콘솔 → loopback 페이지의 전체 SDP
 
-### 5.2 coturn
+### 6.2 coturn
 
 ```bash
 docker logs -f webrtc-coturn
@@ -82,9 +104,9 @@ docker logs -f webrtc-coturn
 `ALLOCATE processed, success` → `CREATE_PERMISSION` → `CHANNEL_BIND` 순으로 성공 로그가 나오면 중계 정상입니다.
 `401` 은 인증 실패입니다.
 
-## 6. 미검증 항목
+## 7. 미검증 항목
 
-- 실제 카메라·마이크 영상과 소리
-- 다른 PC (같은 LAN) 접속 — Windows 방화벽 허용 여부
+- 소리(마이크 음성) 전달
 - 다른 네트워크 간 연결 (srflx 경로, 공인 TURN 서버)
 - HTTPS 터널(cloudflared) 경유 접속
+- 로컬 CA 방식으로 인증서 경고 제거

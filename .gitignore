@@ -62,5 +62,8 @@ build/
 .env.test.local
 .env.production.local
 
+# HTTPS 모드에서 자동 생성되는 자체 서명 인증서/개인키 (PC 마다 다름)
+cert/
+
 # Mac OS System files
 .DS_Store

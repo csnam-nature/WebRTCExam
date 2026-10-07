@@ -34,6 +34,7 @@ npm start                   # http://localhost:3000
 ```
 
 - 탭 2개(또는 브라우저 2개)에서 `http://localhost:3000` → **카메라 켜기 → 접속**
+- **다른 PC** 와 연결하려면 `npm run start:https` 로 실행하고 `https://<서버 IP>:3000` 으로 접속 (인증서 경고 → [고급] → [계속 진행])
 - TURN 서버까지 실습하려면 Docker Desktop 을 켜고 `npm run turn` 실행 후 안내대로 `.env` 설정
 
 | 페이지 | 용도 |

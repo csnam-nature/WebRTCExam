@@ -56,7 +56,8 @@ async function startCamera() {
     showError(
       `이 주소(${location.origin})는 보안 연결이 아니라서 브라우저가 카메라를 막습니다.\n` +
       '카메라는 https:// 또는 http://localhost 에서만 사용할 수 있습니다.\n' +
-      '→ 해결: HTTPS 터널(cloudflared/ngrok)이나 https 로 접속하세요.\n' +
+      `→ 해결: 서버를 HTTPS 모드(npm run start:https)로 실행하고 https://${location.hostname}:${location.port || 443} 로 접속하세요.\n` +
+      '   (자체 서명 인증서 경고가 나오면 [고급] → [계속 진행]) 또는 HTTPS 터널(cloudflared/ngrok)을 쓰세요.\n' +
       '→ 지금은 카메라 없이 [접속]을 눌러 상대 영상만 받을 수 있습니다.'
     );
     return setUi('nocam');
