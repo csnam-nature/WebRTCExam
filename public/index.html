@@ -3,49 +3,69 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>1:1 영상통화   </title>
+  <title>그룹 영상통화</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="head-row">
     <div>
-      <h1> 1:1 영상통화</h1>
-      <p class="sub">탭(또는 브라우저) 2개를 열어 각각 <b>카메라 켜기 → 접속</b>을 누르세요. <a href="loopback.html">단계 2 loopback</a> · <a href="ice-test.html">ICE 테스트</a></p>
+      <h1>그룹 영상통화 <small class="max-badge">최대 4명</small></h1>
+      <p class="sub">이름을 입력하고 <b>카메라 켜기 → 접속</b>을 누르세요. 타일을 클릭하면 크게 보입니다.
+        <a href="call-1to1.html">1:1 통화</a> · <a href="loopback.html">loopback</a> · <a href="ice-test.html">ICE 테스트</a></p>
     </div>
-    <div class="ws-badge"><span id="wsDot" class="dot"></span><span id="wsState">시그널링: 끊김</span></div>
+    <div class="head-right">
+      <span class="count-badge">참가자 <b id="count">0</b>/<span id="max">4</span></span>
+      <span class="ws-badge"><span id="wsDot" class="dot"></span><span id="wsState">시그널링: 끊김</span></span>
+    </div>
   </header>
 
-  <section class="stage">
-    <video id="remote" autoplay playsinline></video>
-    <div id="placeholder" class="placeholder">상대 영상 없음</div>
-    <video id="local" class="pip" autoplay playsinline muted></video>
+  <section class="name-row">
+    <label for="name">이름</label>
+    <input id="name" maxlength="20" placeholder="이름을 입력하세요" autocomplete="nickname">
   </section>
+
+  <section id="grid" class="grid" data-count="1" aria-live="polite"></section>
+  <p id="waiting" class="waiting" hidden>다른 참가자를 기다리는 중…</p>
 
   <section class="controls">
     <button id="btnStart">카메라 켜기</button>
     <button id="btnJoin" disabled>접속</button>
     <button id="btnMute" disabled>🎤 음소거</button>
-    <button id="btnHangup" disabled>📞 종료</button>
+    <button id="btnCam" disabled>📷 카메라 끄기</button>
+    <button id="btnHangup" disabled>📞 나가기</button>
     <label class="chk" title="iceTransportPolicy: 'relay' — 접속 전에 설정"><input type="checkbox" id="chkRelay"> TURN만 사용(relay 강제)</label>
   </section>
 
   <div id="error" class="error" hidden></div>
 
-  <section class="status">
-    연결 상태: <b id="state">-</b> ·
-    ICE: <b id="iceInfo">-</b> ·
-    역할: <b id="role">-</b>
-    <div>내 후보: <b id="candStats">-</b> · ICE 서버: <span id="iceServers">-</span></div>
-    <div id="hint" class="hint"></div>
+  <section>
+    <h2>연결 상태</h2>
+    <div class="table-wrap">
+      <table class="peer-table">
+        <thead><tr><th>이름</th><th>상태</th><th>ICE 경로</th><th>내 후보</th></tr></thead>
+        <tbody id="peerRows"><tr class="empty"><td colspan="4">연결된 참가자가 없습니다.</td></tr></tbody>
+      </table>
+    </div>
+    <p class="ice-line">ICE 서버: <span id="iceServers">-</span></p>
   </section>
 
   <section>
-    <details open>
+    <details>
       <summary>로그</summary>
       <pre id="log"></pre>
     </details>
   </section>
 
-  <script src="main.js"></script>
+  <template id="tileTpl">
+    <div class="tile" tabindex="0">
+      <video autoplay playsinline></video>
+      <div class="avatar"><span></span></div>
+      <div class="overlay"></div>
+      <div class="badge"></div>
+      <div class="label"><span class="who"></span><span class="mic" hidden>🔇</span></div>
+    </div>
+  </template>
+
+  <script src="group.js"></script>
 </body>
 </html>

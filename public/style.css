@@ -92,6 +92,82 @@ video {
 .error[hidden] { display: none; }
 summary { cursor: pointer; font-size: 15px; margin: 16px 0 6px; font-weight: 600; }
 
+/* ---- 그룹 통화 화면 (index.html) ---- */
+.max-badge { font-size: 13px; font-weight: 500; color: #667; margin-left: 4px; }
+.head-right { display: flex; gap: 14px; align-items: center; padding-top: 6px; font-size: 13px; }
+.count-badge b { font-size: 15px; }
+.head-right .ws-badge { padding-top: 0; }
+
+.name-row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; font-size: 14px; }
+.name-row input {
+  flex: 0 1 240px; padding: 7px 10px; font-size: 14px;
+  border: 1px solid #ccd2dd; border-radius: 6px; background: #fff;
+}
+.name-row input:disabled { background: #eef1f6; color: #556; }
+
+/* 인원수별 배치: 1명 1칸 / 2명 나란히 / 3명 2+1(아래 가운데) / 4명 2×2 */
+.grid { display: grid; gap: 8px; grid-template-columns: repeat(2, 1fr); margin-bottom: 8px; }
+.grid[data-count="1"] { grid-template-columns: 1fr; }
+.grid[data-count="3"] { grid-template-columns: repeat(4, 1fr); }
+.grid[data-count="3"] .tile { grid-column: span 2; }
+.grid[data-count="3"] .tile:nth-child(3) { grid-column: 2 / span 2; }
+
+/* 크게 보기: 선택한 타일은 맨 위 전체 폭, 나머지는 아래 줄에 작게 */
+.grid.spotlight[data-count] { grid-template-columns: repeat(3, 1fr); }
+.grid.spotlight[data-count] .tile { grid-column: auto; }
+.grid.spotlight[data-count] .tile.big { grid-column: 1 / -1; order: -1; }
+
+.tile {
+  position: relative; aspect-ratio: 16 / 9; overflow: hidden;
+  background: #111; border-radius: 8px; cursor: pointer;
+}
+.tile:focus-visible, .tile:hover { outline: 2px solid #2f6fed; outline-offset: 1px; }
+.tile.big { cursor: zoom-out; }
+.tile video { display: block; width: 100%; height: 100%; aspect-ratio: auto; border-radius: 0; object-fit: cover; }
+.tile.local video { transform: scaleX(-1); } /* 거울 모드: 내 영상만 */
+
+.avatar { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; background: #2a2f3a; }
+.avatar span {
+  display: flex; align-items: center; justify-content: center;
+  width: 72px; height: 72px; border-radius: 50%;
+  background: #2f6fed; color: #fff; font-size: 30px; font-weight: 600;
+}
+.tile.no-video .avatar { display: flex; }
+.tile.no-video video { visibility: hidden; } /* 숨겨도 소리는 계속 재생된다 */
+
+.overlay {
+  position: absolute; left: 0; right: 0; top: 74%;
+  text-align: center; color: #e8ebf2; font-size: 13px; pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+.badge {
+  position: absolute; top: 8px; right: 8px; padding: 2px 8px;
+  border-radius: 10px; background: rgba(0, 0, 0, 0.55); color: #ddd; font-size: 12px;
+}
+.badge:empty { display: none; }
+.badge.s-new, .badge.s-connecting { color: #facc15; }
+.badge.s-connected { color: #4ade80; }
+.badge.s-disconnected { color: #fb923c; }
+.badge.s-failed { color: #f87171; }
+.label {
+  position: absolute; left: 8px; bottom: 8px; display: flex; gap: 4px; max-width: calc(100% - 16px);
+  padding: 2px 8px; border-radius: 6px; background: rgba(0, 0, 0, 0.55); color: #fff; font-size: 13px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.waiting { margin: 0 0 8px; text-align: center; color: #b36b00; font-size: 14px; }
+
+.peer-table td.s-connected { color: #1d7a35; font-weight: 600; }
+.peer-table td.s-new, .peer-table td.s-connecting { color: #9a6b00; }
+.peer-table td.s-failed { color: #b42323; font-weight: 600; }
+.peer-table tr.empty td { color: #889; text-align: center; }
+.peer-table tr[hidden] { display: none; }
+.ice-line { font-size: 13px; color: #556; margin: 6px 0 0; word-break: break-all; }
+
+@media (max-width: 640px) {
+  .grid[data-count="2"] { grid-template-columns: 1fr; } /* 폰: 2명은 세로 1열 */
+  .avatar span { width: 48px; height: 48px; font-size: 20px; }
+}
+
 /* ---- ICE 테스트 화면 (ice-test.html) ---- */
 .field-label { display: block; font-size: 13px; color: #556; margin-bottom: 4px; }
 textarea {

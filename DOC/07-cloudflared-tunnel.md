@@ -86,7 +86,7 @@ cloudflared tunnel --url http://localhost:3000
 
 1. 두 사람 모두 `https://random-words-1234.trycloudflare.com` 접속 (인증서 경고 없음)
 2. 각자 **카메라 켜기 → 접속**
-3. 상단 "● 시그널링: 연결됨" 확인 — 페이지가 HTTPS 이므로 `main.js` 가 자동으로 `wss://` 사용
+3. 상단 "● 시그널링: 연결됨" 확인 — 페이지가 HTTPS 이므로 `group.js`(그룹) / `call-1to1.js`(1:1) 가 자동으로 `wss://` 사용
 
 ### 6단계. 외부망 연결 확인
 

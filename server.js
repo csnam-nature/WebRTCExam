@@ -101,7 +101,7 @@ async function loadTls() {
   return { cert: pems.cert, key: pems.private, source: `${certFile} (새로 생성: localhost, ${ips.join(', ')})` };
 }
 
-// ---------- 시그널링 ----------
+// ---------- 시그널링 (1:1, 경로 /) ----------
 const clients = []; // 최대 2명
 
 const send = (ws, obj) => ws.readyState === ws.OPEN && ws.send(JSON.stringify(obj));
@@ -134,6 +134,60 @@ function onConnection(ws) {
   });
 }
 
+// ---------- 시그널링 (그룹, 경로 /group, 최대 4명 Mesh) ----------
+// 서버가 참가자마다 id 를 주고, 메시지는 to 로 지정한 상대에게만 전달한다 (from 은 서버가 채움).
+// 새로 들어온 사람이 기존 참가자 전원에게 offer 를 보낸다 → 양쪽이 동시에 offer 하는 충돌(glare)이 없다.
+//   클라 → 서버: join {name} / offer·answer·candidate {to, ...} / state {muted, camOff} (to 없으면 전체)
+//   서버 → 클라: welcome {id, peers:[{id,name}]} / peer-joined {id,name} / peer-left {id} / full {max}
+const GROUP_MAX = 4;
+const group = new Map(); // ws → { id, name }
+
+const RELAY_TYPES = new Set(['offer', 'answer', 'candidate', 'state']);
+
+function onGroupConnection(ws) {
+  ws.on('message', (data) => {
+    let msg;
+    try {
+      msg = JSON.parse(data.toString());
+    } catch {
+      return; // 형식이 잘못된 메시지는 무시
+    }
+    const me = group.get(ws);
+
+    if (msg.type === 'join' && !me) {
+      if (group.size >= GROUP_MAX) {
+        send(ws, { type: 'full', max: GROUP_MAX });
+        ws.close();
+        console.log(`[group] 접속 거부: 가득 참 (${GROUP_MAX}명)`);
+        return;
+      }
+      const id = crypto.randomUUID().slice(0, 8);
+      const name = String(msg.name || '').trim().slice(0, 20) || `참가자 ${group.size + 1}`;
+      const peers = [...group.values()].map((p) => ({ id: p.id, name: p.name }));
+      group.set(ws, { id, name });
+      send(ws, { type: 'welcome', id, name, peers, max: GROUP_MAX });
+      for (const [other] of group) if (other !== ws) send(other, { type: 'peer-joined', id, name });
+      console.log(`[group] 입장: ${name} (${group.size}/${GROUP_MAX})`);
+      return;
+    }
+
+    if (!me || !RELAY_TYPES.has(msg.type)) return;
+    const out = JSON.stringify({ ...msg, from: me.id });
+    for (const [other, info] of group) {
+      if (other === ws || other.readyState !== other.OPEN) continue;
+      if (!msg.to || msg.to === info.id) other.send(out);
+    }
+  });
+
+  ws.on('close', () => {
+    const me = group.get(ws);
+    if (!me) return;
+    group.delete(ws);
+    for (const [other] of group) send(other, { type: 'peer-left', id: me.id });
+    console.log(`[group] 퇴장: ${me.name} (${group.size}/${GROUP_MAX})`);
+  });
+}
+
 // ---------- 시작 ----------
 async function main() {
   let server;
@@ -144,7 +198,11 @@ async function main() {
   } else {
     server = http.createServer(app);
   }
-  new WebSocketServer({ server }).on('connection', onConnection);
+  // WebSocket 경로로 구분: /group → 그룹 통화(index.html), 그 외 → 1:1 통화(call-1to1.html)
+  new WebSocketServer({ server }).on('connection', (ws, req) => {
+    if (req.url.startsWith('/group')) onGroupConnection(ws);
+    else onConnection(ws);
+  });
 
   server.listen(PORT, () => {
     const proto = USE_HTTPS ? 'https' : 'http';

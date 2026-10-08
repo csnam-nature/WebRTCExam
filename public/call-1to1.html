@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>1:1 영상통화   </title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="head-row">
+    <div>
+      <h1> 1:1 영상통화</h1>
+      <p class="sub">탭(또는 브라우저) 2개를 열어 각각 <b>카메라 켜기 → 접속</b>을 누르세요. <a href="index.html">그룹 통화(4명)</a> · <a href="loopback.html">단계 2 loopback</a> · <a href="ice-test.html">ICE 테스트</a></p>
+    </div>
+    <div class="ws-badge"><span id="wsDot" class="dot"></span><span id="wsState">시그널링: 끊김</span></div>
+  </header>
+
+  <section class="stage">
+    <video id="remote" autoplay playsinline></video>
+    <div id="placeholder" class="placeholder">상대 영상 없음</div>
+    <video id="local" class="pip" autoplay playsinline muted></video>
+  </section>
+
+  <section class="controls">
+    <button id="btnStart">카메라 켜기</button>
+    <button id="btnJoin" disabled>접속</button>
+    <button id="btnMute" disabled>🎤 음소거</button>
+    <button id="btnHangup" disabled>📞 종료</button>
+    <label class="chk" title="iceTransportPolicy: 'relay' — 접속 전에 설정"><input type="checkbox" id="chkRelay"> TURN만 사용(relay 강제)</label>
+  </section>
+
+  <div id="error" class="error" hidden></div>
+
+  <section class="status">
+    연결 상태: <b id="state">-</b> ·
+    ICE: <b id="iceInfo">-</b> ·
+    역할: <b id="role">-</b>
+    <div>내 후보: <b id="candStats">-</b> · ICE 서버: <span id="iceServers">-</span></div>
+    <div id="hint" class="hint"></div>
+  </section>
+
+  <section>
+    <details open>
+      <summary>로그</summary>
+      <pre id="log"></pre>
+    </details>
+  </section>
+
+  <script src="call-1to1.js"></script>
+</body>
+</html>

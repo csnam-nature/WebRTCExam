@@ -30,8 +30,10 @@
 │  ├─ turnserver.conf    # coturn 설정 (static-auth-secret, 릴레이 포트 범위)
 │  └─ run-coturn.ps1     # coturn Docker 실행 스크립트 (PC IP 자동 감지)
 ├─ public/
-│  ├─ index.html         # 1:1 통화 화면
-│  ├─ main.js            # 통화 로직 (시그널링, PeerConnection, 상태 표시)
+│  ├─ index.html         # 그룹 통화 화면 (최대 4명) → 08-group-call.md
+│  ├─ group.js           # 그룹 통화 로직 (Mesh, 타일 배치, 크게 보기)
+│  ├─ call-1to1.html     # 1:1 통화 화면
+│  ├─ call-1to1.js       # 1:1 통화 로직 (시그널링, PeerConnection, 상태 표시)
 │  ├─ loopback.html/js   # 단계 2: 한 페이지 loopback
 │  ├─ ice-test.html/js   # STUN/TURN 후보 수집 테스트
 │  └─ style.css          # 공통 스타일
@@ -46,7 +48,7 @@
 |---|---|
 | 정적 서빙 | `public/` 폴더 |
 | 시그널링 | WebSocket. 메시지 내용을 해석하지 않고 **상대에게 그대로 전달** |
-| 방 관리 | 접속자 최대 2명. 세 번째 접속은 `full` 응답 후 종료 |
+| 방 관리 | 1:1(`/` 경로): 접속자 최대 2명, 세 번째 접속은 `full` 응답 후 종료. 그룹(`/group` 경로): 최대 4명 → [08-group-call.md](08-group-call.md) |
 | 역할 결정 | 두 번째 사람이 들어오면 **먼저 있던 사람에게 `ready`** → 그쪽이 offer 생성(caller) |
 | ICE 설정 | `GET /ice-config` → `{ iceServers: [...] }` (`.env` 기반, TURN 임시 자격증명 포함) |
 | HTTPS 모드 | `--https` 또는 `HTTPS=1` 이면 `https.createServer`. 인증서는 `TLS_CERT`/`TLS_KEY` 또는 `cert/` 자동 생성분 |
@@ -104,7 +106,9 @@ sequenceDiagram
     Note over A: pc 재생성, 다음 상대 대기
 ```
 
-## 4. 클라이언트 (`public/main.js`)
+## 4. 클라이언트 (`public/call-1to1.js`)
+
+> 이 절은 1:1 통화 기준입니다. 그룹 통화(`group.js`)는 [08-group-call.md](08-group-call.md) 참고.
 
 ### 4.1 주요 함수
 
@@ -149,7 +153,7 @@ init ──카메라 켜기──► camera ──접속──► waiting ──
 
 ## 5. 화면 구성
 
-### 5.1 1:1 통화 (`index.html`)
+### 5.1 1:1 통화 (`call-1to1.html`)
 
 ```
 ┌───────────────────────────────────────────────────────┐
