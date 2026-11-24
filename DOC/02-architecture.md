@@ -27,7 +27,7 @@
 ├─ .env.example          # 포트·HTTPS·STUN/TURN 설정 예시 (.env 로 복사해 사용, .env 는 git 제외)
 ├─ cert/                 # HTTPS 모드에서 자동 생성되는 자체 서명 인증서·개인키 (git 제외)
 ├─ turn/
-│  ├─ turnserver.conf    # coturn 설정 (static-auth-secret, 릴레이 포트 범위)
+│  ├─ turnserver.conf    # coturn 설정 (릴레이 포트 범위 등, 비밀키는 .env)
 │  └─ run-coturn.ps1     # coturn Docker 실행 스크립트 (PC IP 자동 감지)
 ├─ public/
 │  ├─ index.html         # 그룹 통화 화면 (최대 4명) → 08-group-call.md

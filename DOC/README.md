@@ -41,7 +41,7 @@ npm run start:https         # https://<서버 IP>:3000 (다른 PC 와 연결)
 
 - 탭(또는 브라우저) 여러 개에서 `http://localhost:3000` → **이름 입력 → 카메라 켜기 → 접속** (그룹 통화, 최대 4명)
 - **다른 PC** 와 연결하려면 `npm run start:https` 로 실행하고 `https://<서버 IP>:3000` 으로 접속 (인증서 경고 → [고급] → [계속 진행])
-- TURN 서버까지 실습하려면 Docker Desktop 을 켜고 `npm run turn` 실행 후 안내대로 `.env` 설정
+- TURN 서버까지 실습하려면 Docker Desktop 을 켜고 `.env` 에 `TURN_SECRET` 을 넣은 뒤 `npm run turn` 실행, 안내대로 `TURN_URLS` 설정
 
 | 페이지 | 용도 |
 |---|---|

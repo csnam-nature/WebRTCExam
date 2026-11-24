@@ -88,15 +88,16 @@ npm run turn          # = powershell -File turn/run-coturn.ps1
 스크립트가 하는 일:
 
 1. 기본 게이트웨이 인터페이스의 IPv4 를 찾아 `external-ip` 로 사용 (VPN/가상 어댑터 회피)
-2. 기존 `webrtc-coturn` 컨테이너가 있으면 교체
-3. 포트 매핑 후 `coturn/coturn` 실행
+2. `.env` 의 `TURN_SECRET` 을 읽음 (없으면 안내 후 종료)
+3. 기존 `webrtc-coturn` 컨테이너가 있으면 교체
+4. 포트 매핑 후 `coturn/coturn` 실행
 
 ```powershell
 docker run -d --name webrtc-coturn `
   -p 3478:3478/udp -p 3478:3478/tcp `
   -p 49160-49200:49160-49200/udp `
   -v "<경로>\turnserver.conf:/etc/coturn/turnserver.conf:ro" `
-  coturn/coturn -c /etc/coturn/turnserver.conf --external-ip=<PC IP>
+  coturn/coturn -c /etc/coturn/turnserver.conf --static-auth-secret=<TURN_SECRET> --external-ip=<PC IP>
 ```
 
 | 명령 | 용도 |
@@ -110,7 +111,8 @@ docker run -d --name webrtc-coturn `
 |---|---|---|
 | `listening-port` | `3478` | STUN/TURN 기본 포트 |
 | `fingerprint` | - | STUN 메시지 무결성 지문 (브라우저 호환) |
-| `use-auth-secret` / `static-auth-secret` | `change-me-study-secret` | 시간제한 자격증명. `.env` 의 `TURN_SECRET` 과 일치해야 함 |
+| `use-auth-secret` | - | 시간제한 자격증명 사용 |
+| `--static-auth-secret` | `.env` 의 `TURN_SECRET` | 비밀키. git 에 올라가지 않도록 설정 파일에 적지 않고 스크립트가 실행할 때 넘김 |
 | `realm` | `webrtc.study` | 인증 영역 이름 |
 | `min-port` / `max-port` | `49160` / `49200` | 릴레이 포트 범위. Docker Desktop(Windows)은 host 네트워크가 없어 포트를 매핑해야 하므로 좁게 |
 | `no-tls` | - | 로컬 실습이라 `turns:`(5349) 미사용 |
@@ -121,7 +123,7 @@ docker run -d --name webrtc-coturn `
 ### 4.3 운영 시 주의 (공개 서버)
 
 - 공인 IP 가 있는 서버(클라우드 VM)에 올려야 다른 네트워크에서 사용할 수 있습니다.
-- `static-auth-secret` 을 긴 무작위 값으로 바꿉니다.
+- `TURN_SECRET`(= `static-auth-secret`)은 긴 무작위 값을 씁니다.
 - TLS(`turns:` 5349)를 켜면 TCP/443 만 허용하는 방화벽도 통과하기 쉽습니다.
 - **사설망으로의 중계를 차단**합니다 (내부망 공격 경로 방지):
   ```

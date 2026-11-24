@@ -14,6 +14,19 @@ if (-not $ExternalIp) {
 }
 Write-Host "external-ip: $ExternalIp  (다르면 -ExternalIp 로 지정)"
 
+# 비밀키는 .env 의 TURN_SECRET 을 사용한다 (Node 서버와 같은 값을 쓰게 되고, git 에는 올라가지 않는다)
+$envFile = Join-Path (Split-Path $PSScriptRoot -Parent) '.env'
+$secret = ''
+if (Test-Path $envFile) {
+  $line = Get-Content $envFile -Encoding UTF8 | Where-Object { $_ -match '^\s*TURN_SECRET\s*=' } | Select-Object -Last 1
+  if ($line) { $secret = ($line -replace '^\s*TURN_SECRET\s*=', '').Trim().Trim('"', "'") }
+}
+if (-not $secret) {
+  Write-Host '.env 에 TURN_SECRET 이 없습니다. 아래 명령으로 무작위 값을 만들어 .env 에 넣은 뒤 다시 실행하세요.'
+  Write-Host '  node -e "console.log(require(''crypto'').randomBytes(32).toString(''hex''))"'
+  exit 1
+}
+
 docker info *> $null
 if ($LASTEXITCODE -ne 0) { Write-Host 'Docker 가 실행 중이 아닙니다. Docker Desktop 을 먼저 켜 주세요.'; exit 1 }
 
@@ -27,12 +40,12 @@ docker run -d --name webrtc-coturn `
   -p 3478:3478/udp -p 3478:3478/tcp `
   -p 49160-49200:49160-49200/udp `
   -v "${conf}:/etc/coturn/turnserver.conf:ro" `
-  coturn/coturn -c /etc/coturn/turnserver.conf "--external-ip=$ExternalIp" 2>&1 | ForEach-Object { "$_" }
+  coturn/coturn -c /etc/coturn/turnserver.conf "--static-auth-secret=$secret" "--external-ip=$ExternalIp" 2>&1 | ForEach-Object { "$_" }
 if ($LASTEXITCODE -ne 0) { Write-Host 'coturn 실행 실패'; exit 1 }
 
 Write-Host ''
 Write-Host 'coturn 실행됨. .env 에 다음을 설정하고 npm start 를 다시 실행하세요:'
 Write-Host "  TURN_URLS=turn:${ExternalIp}:3478?transport=udp,turn:${ExternalIp}:3478?transport=tcp"
-Write-Host '  TURN_SECRET=change-me-study-secret   (turnserver.conf 의 static-auth-secret)'
+Write-Host '  (TURN_SECRET 은 .env 의 값을 그대로 사용 중입니다)'
 Write-Host ''
 Write-Host '로그 보기: docker logs -f webrtc-coturn   /  중지: docker rm -f webrtc-coturn'

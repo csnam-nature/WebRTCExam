@@ -100,7 +100,7 @@ copy .env.example .env
 | **같은 PC 에서 시험** | `npm start` | `http://localhost:3000` | 탭/브라우저 여러 개. 카메라 점유 시 Chrome·Edge 로 나눠 열기 |
 | **같은 공유기(LAN)의 다른 PC** | `npm run start:https` | `https://<서버 IP>:3000` | 첫 접속 인증서 경고 → [고급] → [이동]. Windows 방화벽에서 포트 허용 → [04](04-network-access.md) |
 | **다른 네트워크(외부망)** | `npm start` + `cloudflared tunnel --url http://localhost:3000` | `https://xxxx.trycloudflare.com` | 주소는 실행마다 바뀜. 안 되는 망은 공인 TURN 필요 → [07](07-cloudflared-tunnel.md) |
-| **TURN 시험 (LAN)** | `npm run turn` → `.env` 에 `TURN_URLS`, `TURN_SECRET` → `npm start` | `/ice-test.html` 에서 relay 확인 | [TURN만 사용] 체크로 relay 강제 → [03](03-stun-turn.md) |
+| **TURN 시험 (LAN)** | `.env` 에 `TURN_SECRET` → `npm run turn` → `.env` 에 `TURN_URLS` → `npm start` | `/ice-test.html` 에서 relay 확인 | [TURN만 사용] 체크로 relay 강제 → [03](03-stun-turn.md) |
 
 ### 4.4 페이지
 
@@ -120,7 +120,7 @@ copy .env.example .env
 | `TLS_CERT` / `TLS_KEY` | `cert/mycert.pem` | mkcert 등 인증서 지정 (없으면 자체 서명 자동 생성) |
 | `STUN_URLS` | `stun:stun.l.google.com:19302` | 비우면 STUN 끔 |
 | `TURN_URLS` | `turn:192.168.x.x:3478?transport=udp,...` | 비우면 TURN 끔 |
-| `TURN_SECRET` | coturn `static-auth-secret` 과 같은 값 | 시간제한 자격증명 발급 |
+| `TURN_SECRET` | 긴 무작위 값 (`npm run turn` 이 coturn 에 그대로 전달) | 시간제한 자격증명 발급 |
 | `TURN_USER` / `TURN_PASS` | - | 관리형 TURN 의 고정 계정 (`TURN_SECRET` 이 없을 때) |
 
 ## 5. 연결이 안 될 때 빠른 점검
@@ -143,7 +143,7 @@ copy .env.example .env
 - 원격: `origin` → `csnam-nature/WebRTCExam`
 - 기능 단위로 브랜치를 만들어 커밋·푸시하고, 확인 후 `main` 에 병합
   - 예: `feature/stun-turn`(STUN/TURN·HTTPS) → `main` 병합, `branch_multiUser`(그룹 통화)
-- 커밋하지 않는 파일: `.env`, `cert/`, `node_modules/`
+- 커밋하지 않는 파일: `.env`, `env_내부용.txt`, `cert/`, `node_modules/`
 
 ## 7. 문서 목록
 

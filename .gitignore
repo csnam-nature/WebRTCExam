@@ -61,6 +61,7 @@ build/
 .env.development.local
 .env.test.local
 .env.production.local
+env_내부용.txt
 
 # HTTPS 모드에서 자동 생성되는 자체 서명 인증서/개인키 (PC 마다 다름)
 cert/
