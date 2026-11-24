@@ -7,6 +7,7 @@
 
 | 문서 | 내용 |
 |---|---|
+| [00-summary.md](00-summary.md) | **요약본**: 개발 방법(단계별 진행·원칙·검증), 실행 방법(상황별), 빠른 점검 |
 | [01-webrtc-concepts.md](01-webrtc-concepts.md) | WebRTC 핵심 개념: MediaStream, RTCPeerConnection, SDP, ICE |
 | [02-architecture.md](02-architecture.md) | 프로젝트 구조, 시그널링 프로토콜, 코드 흐름, 화면 구성 |
 | [03-stun-turn.md](03-stun-turn.md) | NAT, STUN, TURN, coturn 구성과 시간제한 자격증명 |
